@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest profile-photo-gen --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --eslint)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
