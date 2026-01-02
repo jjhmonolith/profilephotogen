@@ -7,51 +7,62 @@ const replicate = new Replicate({
 
 export async function POST(request: NextRequest) {
   try {
-    const { images } = await request.json();
-
-    if (!images || !Array.isArray(images) || images.length === 0) {
+    // API 토큰 확인
+    if (!process.env.REPLICATE_API_TOKEN) {
+      console.error('REPLICATE_API_TOKEN is not set');
       return NextResponse.json(
-        { error: 'Multiple images are required' },
+        { error: 'Server configuration error: API token not set' },
+        { status: 500 }
+      );
+    }
+
+    const { imageDataUrl } = await request.json();
+
+    if (!imageDataUrl) {
+      return NextResponse.json(
+        { error: 'Image data is required' },
         { status: 400 }
       );
     }
 
-    if (images.length < 3) {
-      return NextResponse.json(
-        { error: 'At least 3 images are required' },
-        { status: 400 }
-      );
-    }
+    console.log('Processing image for profile generation');
 
-    if (images.length > 10) {
-      return NextResponse.json(
-        { error: 'Maximum 10 images allowed' },
-        { status: 400 }
-      );
-    }
-
-    // fofr/consistent-character 모델을 사용하여 일관된 프로필 사진 생성
-    // 여러 장의 사진에서 한 인물의 특징을 학습하여 1장의 프로필 사진 생성
+    // fofr/consistent-character 모델을 사용하여 프로필 사진 생성
     const output = await replicate.run(
       "fofr/consistent-character:9c77a5f3c27c67a06bc370fe9c22b76ede7fe7a94200d0e02875021c4f9f884a",
       {
         input: {
-          subject: images[0], // 첫 번째 이미지를 주 참조로 사용
-          prompt: "professional headshot portrait, bright sky blue background, soft studio lighting, clean and minimalist, high quality photography, 8k, professional photographer style, natural smile, business casual attire, sharp focus on face, consistent facial features",
-          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, dark background, messy background, cluttered, inconsistent face",
-          number_of_images: 1, // 1장만 생성
+          subject: imageDataUrl,
+          prompt: "professional headshot portrait, bright sky blue background, soft studio lighting, clean and minimalist, high quality photography, 8k, professional photographer style, natural smile, business casual attire, sharp focus on face",
+          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, dark background, messy background, cluttered",
+          number_of_images: 4,
           output_format: "png",
-          output_quality: 95,
-          randomise_poses: false,
+          output_quality: 90,
+          randomise_poses: true,
         }
       }
-    );
+    ) as any;
 
-    return NextResponse.json({ images: output });
+    console.log('Image generation successful');
+
+    // Replicate API는 배열을 반환
+    const imageUrls = Array.isArray(output) ? output : [output];
+
+    return NextResponse.json({ images: imageUrls });
   } catch (error: any) {
     console.error('Error generating images:', error);
+
+    // 상세한 에러 정보 제공
+    const errorMessage = error.message || 'Failed to generate images';
+    const errorDetails = error.response?.data || error.toString();
+
+    console.error('Error details:', errorDetails);
+
     return NextResponse.json(
-      { error: error.message || 'Failed to generate images' },
+      {
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     );
   }

@@ -8,55 +8,31 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps) {
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const newImages: string[] = [];
-    let filesProcessed = 0;
+    if (!file.type.startsWith('image/')) {
+      setError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
 
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        setError('이미지 파일만 업로드 가능합니다.');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newImages.push(reader.result as string);
-        filesProcessed++;
-
-        if (filesProcessed === files.length) {
-          setSelectedImages((prev) => [...prev, ...newImages]);
-          setError(null);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string);
+      setError(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleGenerate = async () => {
-    if (selectedImages.length === 0) {
+    if (!selectedImage) {
       setError('이미지를 먼저 업로드해주세요.');
-      return;
-    }
-
-    if (selectedImages.length < 3) {
-      setError('최소 3장의 사진을 업로드해주세요.');
-      return;
-    }
-
-    if (selectedImages.length > 10) {
-      setError('최대 10장까지 업로드 가능합니다.');
       return;
     }
 
@@ -69,7 +45,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ images: selectedImages }),
+        body: JSON.stringify({ imageDataUrl: selectedImage }),
       });
 
       if (!response.ok) {
@@ -87,7 +63,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           프로필 사진 생성하기
@@ -100,42 +76,26 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              multiple
               onChange={handleFileSelect}
               className="hidden"
               id="file-upload"
             />
 
-            {selectedImages.length > 0 ? (
+            {selectedImage ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {selectedImages.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <div className="relative w-full aspect-square">
-                        <Image
-                          src={image}
-                          alt={`Selected ${index + 1}`}
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                      </div>
-                      <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-                        {index + 1}
-                      </div>
-                    </div>
-                  ))}
+                <div className="relative w-64 h-64 mx-auto">
+                  <Image
+                    src={selectedImage}
+                    alt="Selected"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
                 >
-                  사진 추가하기 ({selectedImages.length}/10)
+                  다른 이미지 선택
                 </button>
               </div>
             ) : (
@@ -159,12 +119,12 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
                   </svg>
                   <div className="text-gray-600">
                     <span className="font-semibold text-blue-600">
-                      클릭하여 여러 장의 사진 업로드
+                      클릭하여 업로드
                     </span>
                     {' '}또는 드래그 앤 드롭
                   </div>
                   <p className="text-xs text-gray-500">
-                    PNG, JPG, JPEG (최소 3장, 최대 10장)
+                    PNG, JPG, JPEG (최대 10MB)
                   </p>
                 </div>
               </label>
@@ -181,7 +141,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
           {/* 생성 버튼 */}
           <button
             onClick={handleGenerate}
-            disabled={selectedImages.length < 3 || isGenerating}
+            disabled={!selectedImage || isGenerating}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             {isGenerating ? (
@@ -209,12 +169,12 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
                 프로필 사진 생성 중...
               </span>
             ) : (
-              `프로필 사진 생성하기 (${selectedImages.length}장)`
+              '프로필 사진 생성하기'
             )}
           </button>
 
           <p className="text-sm text-gray-500 text-center">
-            사진 생성에는 약 1~2분 정도 소요됩니다.
+            사진 생성에는 약 30초~1분 정도 소요됩니다.
           </p>
         </div>
       </div>
