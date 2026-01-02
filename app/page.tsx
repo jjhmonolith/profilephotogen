@@ -20,7 +20,7 @@ export default function Home() {
             AI 프로필 사진 생성기
           </h1>
           <p className="text-gray-600 mt-2">
-            사진을 업로드하면 AI가 전문가 수준의 프로필 사진으로 변환해드립니다
+            여러 장의 사진을 업로드하면 AI가 하나의 완벽한 프로필 사진을 생성합니다
           </p>
         </div>
       </header>
@@ -34,14 +34,15 @@ export default function Home() {
               사용 방법
             </h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-600">
-              <li>본인의 얼굴이 선명하게 나온 사진을 업로드해주세요</li>
-              <li>AI가 자동으로 4장의 프로필 사진을 생성합니다</li>
-              <li>마음에 드는 사진을 다운로드하여 사용하세요</li>
+              <li>본인의 얼굴이 선명하게 나온 사진을 3~10장 업로드해주세요</li>
+              <li>다양한 각도와 표정의 사진을 포함하면 더 좋습니다</li>
+              <li>AI가 자동으로 1장의 완벽한 프로필 사진을 생성합니다</li>
+              <li>생성된 사진을 다운로드하여 사용하세요</li>
             </ol>
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>팁:</strong> 밝은 조명 아래에서 정면을 바라본 사진이 가장 좋은 결과를 만들어냅니다.
-                생성된 사진은 밝은 하늘색 배경에 전문적인 스튜디오 조명으로 촬영된 것처럼 보입니다.
+                <strong>팁:</strong> 여러 장의 사진을 업로드할수록 AI가 얼굴 특징을 더 정확하게 학습합니다.
+                밝은 조명 아래에서 촬영된 사진과 다양한 각도의 사진을 포함하면 최상의 결과를 얻을 수 있습니다.
               </p>
             </div>
           </div>
