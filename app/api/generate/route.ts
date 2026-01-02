@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageDataUrl } = await request.json();
+    const { imageDataUrl, userInfo, selectedPose } = await request.json();
 
     if (!imageDataUrl) {
       return NextResponse.json(
@@ -25,7 +25,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Processing image for profile generation');
+    console.log('Processing image for profile generation', { userInfo, selectedPose });
+
+    // 나이대와 직군에 따른 프롬프트 생성
+    const age = userInfo?.age ? parseInt(userInfo.age) : 30;
+    const gender = userInfo?.gender || 'male';
+    const jobRole = userInfo?.jobRole || 'developer';
+
+    // 나이대 표현
+    let ageDescription = '';
+    if (age < 30) {
+      ageDescription = 'young professional';
+    } else if (age < 45) {
+      ageDescription = 'professional';
+    } else {
+      ageDescription = 'experienced professional';
+    }
+
+    // 성별에 따른 표현
+    const genderTerm = gender === 'female' ? 'woman' : 'man';
+
+    // 직군별 복장 및 분위기
+    const jobRoleStyles: Record<string, string> = {
+      developer: 'smart casual, modern tech professional style',
+      designer: 'creative professional, contemporary styling',
+      pm: 'business professional, polished appearance',
+      sales: 'business formal, confident presence',
+      education: 'approachable professional, warm demeanor',
+      marketing: 'modern professional, creative edge',
+      hr: 'professional friendly, welcoming appearance',
+      finance: 'business formal, conservative professional'
+    };
+
+    const styleGuide = jobRoleStyles[jobRole] || jobRoleStyles.developer;
+
+    // 포즈별 프롬프트 매핑
+    const posePrompts: Record<string, string> = {
+      'front-formal': 'facing camera directly, arms naturally at sides, shoulders square to camera, neutral professional stance',
+      'arms-crossed': 'arms crossed confidently, facing camera, professional stance, approachable expression',
+      'slight-angle': 'body at a slight angle, face towards camera, one shoulder forward, relaxed professional pose',
+      'hands-together': 'hands clasped together in front, standing upright, composed and professional demeanor'
+    };
+
+    const posePrompt = posePrompts[selectedPose || 'front-formal'];
 
     // fofr/consistent-character 최신 모델을 사용하여 프로필 사진 생성
     const output = await replicate.run(
@@ -33,12 +75,12 @@ export async function POST(request: NextRequest) {
       {
         input: {
           subject: imageDataUrl,
-          prompt: "professional headshot portrait, bright sky blue background, soft studio lighting, clean and minimalist, high quality photography, 8k, professional photographer style, natural smile, business casual attire, sharp focus on face",
-          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, dark background, messy background, cluttered",
-          number_of_outputs: 4,
+          prompt: `professional corporate headshot of a ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, neutral light gray background, professional studio lighting, natural expression, subtle smile, looking at camera, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use`,
+          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, colorful background, messy background, cluttered, unprofessional, casual selfie, party photo, seductive, sexy, glamorous",
+          number_of_outputs: 1,
           output_format: "png",
-          output_quality: 90,
-          randomise_poses: true,
+          output_quality: 95,
+          randomise_poses: false,
         }
       }
     ) as any;
