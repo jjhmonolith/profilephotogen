@@ -8,6 +8,12 @@ export interface UserInfo {
   jobRole: string;
 }
 
+interface UserInfoErrors {
+  age?: string;
+  gender?: string;
+  jobRole?: string;
+}
+
 interface UserInfoFormProps {
   onSubmit: (info: UserInfo) => void;
 }
@@ -62,10 +68,10 @@ export default function UserInfoForm({ onSubmit }: UserInfoFormProps) {
     jobRole: ''
   });
 
-  const [errors, setErrors] = useState<Partial<UserInfo>>({});
+  const [errors, setErrors] = useState<UserInfoErrors>({});
 
   const validate = () => {
-    const newErrors: Partial<UserInfo> = {};
+    const newErrors: UserInfoErrors = {};
 
     if (!userInfo.age || parseInt(userInfo.age) < 18 || parseInt(userInfo.age) > 100) {
       newErrors.age = '18-100 사이의 나이를 입력해주세요';
