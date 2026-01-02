@@ -27,15 +27,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Processing image for profile generation');
 
-    // fofr/consistent-character 모델을 사용하여 프로필 사진 생성
+    // fofr/consistent-character 최신 모델을 사용하여 프로필 사진 생성
     const output = await replicate.run(
-      "fofr/consistent-character:9c77a5f3c27c67a06bc370fe9c22b76ede7fe7a94200d0e02875021c4f9f884a",
+      "fofr/consistent-character:9c77a3c2f884193fcee4d89645f02a0b9def9434f9e03cb98460456b831c8772",
       {
         input: {
           subject: imageDataUrl,
           prompt: "professional headshot portrait, bright sky blue background, soft studio lighting, clean and minimalist, high quality photography, 8k, professional photographer style, natural smile, business casual attire, sharp focus on face",
           negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, dark background, messy background, cluttered",
-          number_of_images: 4,
+          number_of_outputs: 4,
           output_format: "png",
           output_quality: 90,
           randomise_poses: true,
