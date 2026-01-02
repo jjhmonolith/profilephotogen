@@ -59,12 +59,12 @@ export async function POST(request: NextRequest) {
 
     const styleGuide = jobRoleStyles[jobRole] || jobRoleStyles.developer;
 
-    // 포즈별 프롬프트 매핑
+    // 포즈별 프롬프트 매핑 (모든 포즈에서 얼굴은 정면)
     const posePrompts: Record<string, string> = {
-      'front-formal': 'facing camera directly, arms naturally at sides, shoulders square to camera, neutral professional stance',
-      'arms-crossed': 'arms crossed confidently, facing camera, professional stance, approachable expression',
-      'slight-angle': 'body at a slight angle, face towards camera, one shoulder forward, relaxed professional pose',
-      'hands-together': 'hands clasped together in front, standing upright, composed and professional demeanor'
+      'front-formal': 'face directly facing camera, head straight forward, arms naturally at sides, shoulders square to camera, neutral professional stance',
+      'arms-crossed': 'face directly facing camera, head straight forward, arms crossed confidently, professional stance, approachable expression',
+      'slight-angle': 'face directly facing camera, head straight forward, body at a slight angle, one shoulder forward, relaxed professional pose',
+      'hands-together': 'face directly facing camera, head straight forward, hands clasped together in front, standing upright, composed and professional demeanor'
     };
 
     const posePrompt = posePrompts[selectedPose || 'front-formal'];
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
       {
         input: {
           subject: imageDataUrl,
-          prompt: `professional corporate headshot of a ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, neutral light gray background, professional studio lighting, natural expression, subtle smile, looking at camera, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use`,
-          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, colorful background, messy background, cluttered, unprofessional, casual selfie, party photo, seductive, sexy, glamorous",
+          prompt: `professional corporate headshot of a ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, neutral light gray background, professional studio lighting, natural expression, subtle smile, looking directly at camera, eyes facing camera, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use`,
+          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, colorful background, messy background, cluttered, unprofessional, casual selfie, party photo, seductive, sexy, glamorous, side view, profile view, side face, turned head, looking away, face turned away, back view",
           number_of_outputs: 1,
           output_format: "png",
           output_quality: 95,
