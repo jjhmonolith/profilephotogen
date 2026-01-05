@@ -13,7 +13,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [selectedPose, setSelectedPose] = useState<string>('front-formal');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,25 +23,44 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
     setStep(2);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
+    // 최대 4장까지만 허용
+    if (files.length > 4) {
+      setError('최대 4장까지만 업로드 가능합니다.');
+      return;
+    }
+
+    // 모든 파일이 이미지인지 확인
+    const allImages = Array.from(files).every(file => file.type.startsWith('image/'));
+    if (!allImages) {
       setError('이미지 파일만 업로드 가능합니다.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSelectedImage(reader.result as string);
+    // 모든 파일을 base64로 변환
+    const imagePromises = Array.from(files).map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    });
+
+    try {
+      const images = await Promise.all(imagePromises);
+      setSelectedImages(images);
       setError(null);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      setError('이미지 로딩에 실패했습니다.');
+    }
   };
 
   const handleGenerate = async () => {
-    if (!selectedImage) {
+    if (selectedImages.length === 0) {
       setError('이미지를 먼저 업로드해주세요.');
       return;
     }
@@ -56,7 +75,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageDataUrl: selectedImage,
+          imageDataUrls: selectedImages,
           userInfo: userInfo,
           selectedPose: selectedPose
         }),
@@ -140,20 +159,28 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
                 id="file-upload"
               />
 
-              {selectedImage ? (
+              {selectedImages.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="relative w-64 h-64 mx-auto">
-                    <Image
-                      src={selectedImage}
-                      alt="Selected"
-                      fill
-                      className="object-cover rounded-lg"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedImages.map((image: string, index: number) => (
+                      <div key={index} className="relative w-full aspect-square">
+                        <Image
+                          src={image}
+                          alt={`Selected ${index + 1}`}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-sm text-gray-600 text-center">
+                    {selectedImages.length}장 선택됨 (최대 4장)
                   </div>
                   <button
                     onClick={() => fileInputRef.current?.click()}
@@ -188,7 +215,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
                       {' '}또는 드래그 앤 드롭
                     </div>
                     <p className="text-xs text-gray-500">
-                      PNG, JPG, JPEG (최대 10MB)
+                      PNG, JPG, JPEG (최대 4장, 각 10MB)
                     </p>
                   </div>
                 </label>
@@ -212,7 +239,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
               </button>
               <button
                 onClick={handleGenerate}
-                disabled={!selectedImage || isGenerating}
+                disabled={selectedImages.length === 0 || isGenerating}
                 className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
               >
                 {isGenerating ? (

@@ -16,16 +16,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageDataUrl, userInfo, selectedPose } = await request.json();
+    const { imageDataUrls, userInfo, selectedPose } = await request.json();
 
-    if (!imageDataUrl) {
+    if (!imageDataUrls || imageDataUrls.length === 0) {
       return NextResponse.json(
-        { error: 'Image data is required' },
+        { error: 'At least one image is required' },
         { status: 400 }
       );
     }
 
-    console.log('Processing image for profile generation', { userInfo, selectedPose });
+    console.log('Processing images for profile generation', {
+      imageCount: imageDataUrls.length,
+      userInfo,
+      selectedPose
+    });
 
     // 나이대와 직군에 따른 프롬프트 생성
     const age = userInfo?.age ? parseInt(userInfo.age) : 30;
@@ -70,24 +74,35 @@ export async function POST(request: NextRequest) {
     const posePrompt = posePrompts[selectedPose || 'front-formal'];
 
     // PuLID 모델을 사용하여 프로필 사진 생성 (얼굴 일관성 우수, 다중 이미지 지원)
+    const inputParams: any = {
+      main_face_image: imageDataUrls[0],
+      prompt: `professional corporate headshot, ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, head perfectly straight and upright, head not tilted, head vertical, face directly facing camera, eyes looking straight at camera, direct eye contact with camera, solid plain light gray background, uniform flat background, no gradient, no texture, no patterns, studio backdrop, professional studio lighting, soft even lighting, natural expression, subtle smile, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use, front-facing portrait`,
+      negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, unprofessional, casual selfie, party photo, seductive, sexy, glamorous, side view, profile view, side face, turned head, looking away, face turned away, back view, tilted head, head tilt, angled head, looking up, looking down, eyes looking away, eyes closed, head turned, colorful background, patterned background, textured background, gradient background, messy background, cluttered background, outdoor background, nature background, office background, room background, wall details, decorations, furniture, windows, doors",
+      num_steps: 20,
+      start_step: 0,
+      guidance_scale: 1.2,
+      seed: Math.floor(Math.random() * 1000000),
+      output_format: "png",
+      output_quality: 100,
+      id_scale: 0.8,
+      mode: "fidelity",
+      true_cfg: 1,
+    };
+
+    // 추가 참조 이미지가 있으면 auxiliary 이미지로 추가
+    if (imageDataUrls.length > 1) {
+      inputParams.auxiliary_face_image1 = imageDataUrls[1];
+    }
+    if (imageDataUrls.length > 2) {
+      inputParams.auxiliary_face_image2 = imageDataUrls[2];
+    }
+    if (imageDataUrls.length > 3) {
+      inputParams.auxiliary_face_image3 = imageDataUrls[3];
+    }
+
     const output = await replicate.run(
       "zsxkib/pulid:1f33eab7473a8e97f500f67c7892c85c2d3f5b648ebf0f4bbd98ee66c47b935c",
-      {
-        input: {
-          main_face_image: imageDataUrl,
-          prompt: `professional corporate headshot, ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, head perfectly straight and upright, head not tilted, head vertical, face directly facing camera, eyes looking straight at camera, direct eye contact with camera, solid plain light gray background, uniform flat background, no gradient, no texture, no patterns, studio backdrop, professional studio lighting, soft even lighting, natural expression, subtle smile, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use, front-facing portrait`,
-          negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, unprofessional, casual selfie, party photo, seductive, sexy, glamorous, side view, profile view, side face, turned head, looking away, face turned away, back view, tilted head, head tilt, angled head, looking up, looking down, eyes looking away, eyes closed, head turned, colorful background, patterned background, textured background, gradient background, messy background, cluttered background, outdoor background, nature background, office background, room background, wall details, decorations, furniture, windows, doors",
-          num_steps: 20,
-          start_step: 0,
-          guidance_scale: 1.2,
-          seed: Math.floor(Math.random() * 1000000),
-          output_format: "png",
-          output_quality: 100,
-          id_scale: 0.8,
-          mode: "fidelity",
-          true_cfg: 1,
-        }
-      }
+      { input: inputParams }
     ) as any;
 
     console.log('Image generation successful');
