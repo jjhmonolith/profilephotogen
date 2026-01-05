@@ -79,14 +79,13 @@ export async function POST(request: NextRequest) {
       prompt: `professional corporate headshot, ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, head perfectly straight and upright, head not tilted, head vertical, face directly facing camera, eyes looking straight at camera, direct eye contact with camera, solid plain light gray background, uniform flat background, no gradient, no texture, no patterns, studio backdrop, professional studio lighting, soft even lighting, natural expression, subtle smile, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use, front-facing portrait`,
       negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, unprofessional, casual selfie, party photo, seductive, sexy, glamorous, side view, profile view, side face, turned head, looking away, face turned away, back view, tilted head, head tilt, angled head, looking up, looking down, eyes looking away, eyes closed, head turned, colorful background, patterned background, textured background, gradient background, messy background, cluttered background, outdoor background, nature background, office background, room background, wall details, decorations, furniture, windows, doors",
       num_steps: 20,
-      start_step: 0,
-      guidance_scale: 1.2,
+      cfg_scale: 1.2,
       seed: Math.floor(Math.random() * 1000000),
       output_format: "png",
       output_quality: 100,
-      id_scale: 0.8,
-      mode: "fidelity",
-      true_cfg: 1,
+      identity_scale: 0.8,
+      generation_mode: "fidelity",
+      num_samples: 1,
     };
 
     // 추가 참조 이미지가 있으면 auxiliary 이미지로 추가
