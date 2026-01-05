@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 import UserInfoForm, { UserInfo } from './UserInfoForm';
 import PoseSelector, { professionalPoses } from './PoseSelector';
 
@@ -40,22 +41,35 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
       return;
     }
 
-    // 모든 파일을 base64로 변환
-    const imagePromises = Array.from(files).map(file => {
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    });
-
     try {
+      // 이미지 압축 옵션
+      const options = {
+        maxSizeMB: 0.8, // 최대 800KB로 압축
+        maxWidthOrHeight: 1024, // 최대 1024px
+        useWebWorker: true,
+        fileType: 'image/jpeg' as const,
+      };
+
+      // 모든 파일을 압축하고 base64로 변환
+      const imagePromises = Array.from(files).map(async (file) => {
+        // 이미지 압축
+        const compressedFile = await imageCompression(file, options);
+
+        // base64로 변환
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(compressedFile);
+        });
+      });
+
       const images = await Promise.all(imagePromises);
       setSelectedImages(images);
       setError(null);
     } catch (err) {
-      setError('이미지 로딩에 실패했습니다.');
+      console.error('Image compression error:', err);
+      setError('이미지 처리에 실패했습니다.');
     }
   };
 
