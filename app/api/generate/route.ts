@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const output = await replicate.run(
-      "zsxkib/pulid:1f33eab7473a8e97f500f67c7892c85c2d3f5b648ebf0f4bbd98ee66c47b935c",
+      "zsxkib/pulid:43d309c37ab4e62361e5e29b8e9e867fb2dcbcec77ae91206a8d95ac5dd451a0",
       { input: inputParams }
     ) as any;
 
