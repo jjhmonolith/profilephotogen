@@ -18,15 +18,27 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch account info');
+      const errorText = await response.text();
+      console.error('Account API error:', response.status, errorText);
+      throw new Error(`Failed to fetch account info: ${response.status}`);
     }
 
     const account = await response.json();
+    console.log('Account API response:', JSON.stringify(account, null, 2));
+
+    const balance = account.billing?.prepaid_balance 
+      ?? account.prepaid_balance 
+      ?? account.credit_balance
+      ?? account.credits
+      ?? account.balance 
+      ?? null;
 
     return NextResponse.json({
-      balance: account.balance || 0,
+      balance: balance,
       estimatedCostPerGeneration: ESTIMATED_COST_PER_GENERATION,
       username: account.username,
+      type: account.type,
+      rawAccount: account,
     });
   } catch (error: any) {
     console.error('Error fetching credits:', error);

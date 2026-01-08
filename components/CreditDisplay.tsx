@@ -52,7 +52,10 @@ export default function CreditDisplay() {
     );
   }
 
-  const estimatedGenerations = Math.floor(creditInfo.balance / creditInfo.estimatedCostPerGeneration);
+  const hasBalance = creditInfo.balance !== null && creditInfo.balance !== undefined;
+  const estimatedGenerations = hasBalance 
+    ? Math.floor(creditInfo.balance / creditInfo.estimatedCostPerGeneration) 
+    : null;
 
   return (
     <div className="flex items-center gap-3 text-sm">
@@ -61,16 +64,20 @@ export default function CreditDisplay() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span className="font-medium text-blue-700">
-          ${creditInfo.balance.toFixed(2)}
+          {hasBalance ? `$${creditInfo.balance.toFixed(2)}` : '잔액 조회 불가'}
         </span>
       </div>
       <div className="text-gray-500 hidden sm:block">
         <span className="text-gray-400">예상 비용:</span>
         <span className="ml-1">${creditInfo.estimatedCostPerGeneration.toFixed(2)}/회</span>
-        <span className="mx-1 text-gray-300">|</span>
-        <span className="text-gray-400">약</span>
-        <span className="ml-1 font-medium text-gray-600">{estimatedGenerations}회</span>
-        <span className="ml-1 text-gray-400">생성 가능</span>
+        {hasBalance && estimatedGenerations !== null && (
+          <>
+            <span className="mx-1 text-gray-300">|</span>
+            <span className="text-gray-400">약</span>
+            <span className="ml-1 font-medium text-gray-600">{estimatedGenerations}회</span>
+            <span className="ml-1 text-gray-400">생성 가능</span>
+          </>
+        )}
       </div>
     </div>
   );
