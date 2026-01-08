@@ -82,26 +82,26 @@ export async function POST(request: NextRequest) {
     const prompt = `Create a professional corporate headshot photograph.
 
 IMAGE ROLES:
-- Image 1 (first image): BACKGROUND REFERENCE - Use this exact light blue studio background color and style
-- Images 2+ (remaining images): FACE/IDENTITY REFERENCE - Maintain exact facial features from these reference photos
+- Image 1 (first image): BACKGROUND COLOR REFERENCE - Copy this exact background color
+- Images 2+ (remaining images): FACE/IDENTITY REFERENCE - Maintain exact facial features
 
-SUBJECT DETAILS:
-- ${ageDescription} ${genderTerm}
-- Style: ${styleGuide}
-- Pose: ${posePrompt}
+SUBJECT: ${ageDescription} ${genderTerm}, ${styleGuide}
+POSE: ${posePrompt}
 
-REQUIREMENTS:
-- Background MUST match the light blue color from the background reference image exactly
-- Head perfectly straight and upright, not tilted
-- Face directly facing the camera with direct eye contact
-- Professional studio lighting with soft, even illumination
-- Natural, confident expression with a subtle smile
-- High-quality professional photography style
-- Clean and minimalist composition
-- Well-groomed, polished appearance appropriate for corporate use
-- Maintain the exact facial features and identity from the face reference images
+CRITICAL BACKGROUND REQUIREMENTS:
+- Background color: light pastel sky blue (#D6EBFC, RGB 214/235/252)
+- MUST be uniform, solid, flat color - no gradients, no shadows, no variations
+- Match the EXACT color tone from the first reference image
+- Very light, almost white-ish blue - NOT gray, NOT dark blue, NOT cyan
 
-Do NOT include: watermarks, text overlays, dramatic shadows, patterned backgrounds, casual or unprofessional styling.`;
+OTHER REQUIREMENTS:
+- Head straight and upright, facing camera with direct eye contact
+- Professional studio lighting, soft and even
+- Natural confident expression with subtle smile
+- High-quality professional photography
+- Maintain exact facial identity from reference images
+
+FORBIDDEN: dark backgrounds, gray backgrounds, gradients, shadows on background, any background variation, watermarks, text.`;
 
     const inputParams: any = {
       prompt,
