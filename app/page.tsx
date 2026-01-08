@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import ImageGallery from '@/components/ImageGallery';
+import CreditDisplay from '@/components/CreditDisplay';
 
 export default function Home() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -16,12 +17,17 @@ export default function Home() {
       {/* 헤더 */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-800">
-            AI 프로필 사진 생성기
-          </h1>
-          <p className="text-gray-600 mt-2">
-            사진을 업로드하면 AI가 전문가 수준의 프로필 사진으로 변환해드립니다
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">
+                AI 프로필 사진 생성기
+              </h1>
+              <p className="text-gray-600 mt-2">
+                사진을 업로드하면 AI가 전문가 수준의 프로필 사진으로 변환해드립니다
+              </p>
+            </div>
+            <CreditDisplay />
+          </div>
         </div>
       </header>
 
