@@ -34,9 +34,10 @@ export default function Home() {
               사용 방법
             </h2>
             <ol className="list-decimal list-inside space-y-2 text-gray-600">
+              <li>기본 정보(나이, 성별, 직군)를 입력해주세요</li>
+              <li>원하는 포즈를 선택해주세요</li>
               <li>본인의 얼굴이 선명하게 나온 사진을 업로드해주세요</li>
-              <li>AI가 자동으로 4장의 프로필 사진을 생성합니다</li>
-              <li>마음에 드는 사진을 다운로드하여 사용하세요</li>
+              <li>AI가 프로필 사진을 생성합니다</li>
             </ol>
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
