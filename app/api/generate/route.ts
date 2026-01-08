@@ -96,10 +96,11 @@ Do NOT include: watermarks, text overlays, dramatic shadows, colorful or pattern
 
     const inputParams: any = {
       prompt,
-      reference_images: referenceImages,
+      image_input: referenceImages,
       aspect_ratio: "1:1",
+      resolution: "2K",
       output_format: "png",
-      safety_filter_level: "block_medium_and_above",
+      safety_filter_level: "block_only_high",
     };
 
     const output = await replicate.run(
