@@ -73,34 +73,37 @@ export async function POST(request: NextRequest) {
 
     const posePrompt = posePrompts[selectedPose || 'front-formal'];
 
-    // PuLID 모델을 사용하여 프로필 사진 생성 (얼굴 일관성 우수, 다중 이미지 지원)
+    const MAX_REFERENCE_IMAGES = 5;
+    const referenceImages = imageDataUrls.slice(0, MAX_REFERENCE_IMAGES);
+    
+    const prompt = `Create a professional corporate headshot photograph of the person shown in the reference image(s). 
+The subject is a ${ageDescription} ${genderTerm}.
+Style: ${styleGuide}
+Pose: ${posePrompt}
+
+Requirements:
+- Head perfectly straight and upright, not tilted
+- Face directly facing the camera with direct eye contact
+- Solid plain light gray background, uniform and flat
+- Professional studio lighting with soft, even illumination
+- Natural, confident expression with a subtle smile
+- High-quality professional photography style
+- Clean and minimalist composition
+- Well-groomed, polished appearance appropriate for corporate use
+- Maintain the exact facial features and identity from the reference image(s)
+
+Do NOT include: watermarks, text overlays, dramatic shadows, colorful or patterned backgrounds, casual or unprofessional styling.`;
+
     const inputParams: any = {
-      main_face_image: imageDataUrls[0],
-      prompt: `professional corporate headshot, ${ageDescription} ${genderTerm}, ${styleGuide}, ${posePrompt}, head perfectly straight and upright, head not tilted, head vertical, face directly facing camera, eyes looking straight at camera, direct eye contact with camera, solid plain light gray background, uniform flat background, no gradient, no texture, no patterns, studio backdrop, professional studio lighting, soft even lighting, natural expression, subtle smile, high-quality professional photography, clean and minimalist, smooth skin texture, well-groomed appearance, appropriate for corporate use, front-facing portrait`,
-      negative_prompt: "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, harsh shadows, overexposed, underexposed, artificial look, overly retouched, plastic skin, cartoon, anime, dramatic lighting, unprofessional, casual selfie, party photo, seductive, sexy, glamorous, side view, profile view, side face, turned head, looking away, face turned away, back view, tilted head, head tilt, angled head, looking up, looking down, eyes looking away, eyes closed, head turned, colorful background, patterned background, textured background, gradient background, messy background, cluttered background, outdoor background, nature background, office background, room background, wall details, decorations, furniture, windows, doors",
-      num_steps: 20,
-      cfg_scale: 1.2,
-      seed: Math.floor(Math.random() * 1000000),
+      prompt,
+      reference_images: referenceImages,
+      aspect_ratio: "1:1",
       output_format: "png",
-      output_quality: 100,
-      identity_scale: 0.8,
-      generation_mode: "fidelity",
-      num_samples: 1,
+      safety_filter_level: "block_medium_and_above",
     };
 
-    // 추가 참조 이미지가 있으면 auxiliary 이미지로 추가
-    if (imageDataUrls.length > 1) {
-      inputParams.auxiliary_face_image1 = imageDataUrls[1];
-    }
-    if (imageDataUrls.length > 2) {
-      inputParams.auxiliary_face_image2 = imageDataUrls[2];
-    }
-    if (imageDataUrls.length > 3) {
-      inputParams.auxiliary_face_image3 = imageDataUrls[3];
-    }
-
     const output = await replicate.run(
-      "zsxkib/pulid:43d309c37ab4e62361e5e29b8e9e867fb2dcbcec77ae91206a8d95ac5dd451a0",
+      "google/nano-banana-pro",
       { input: inputParams }
     ) as any;
 
