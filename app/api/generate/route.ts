@@ -5,6 +5,10 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+// Light blue studio background image (solid color #D6EBFC) - base64 encoded 512x512 PNG
+// This provides consistent background reference for all generated profile photos
+const STUDIO_BACKGROUND_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIAAQMAAADOtka5AAAABlBMVEXW6/z///9J0xLFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGklEQVR4nO3BAQ0AAADCoPdPbQ43oAAAAACvBg4AAAH3GNIAAAAASUVORK5CYII=';
+
 export async function POST(request: NextRequest) {
   try {
     // API 토큰 확인
@@ -76,27 +80,33 @@ export async function POST(request: NextRequest) {
     const MAX_REFERENCE_IMAGES = 5;
     const referenceImages = imageDataUrls.slice(0, MAX_REFERENCE_IMAGES);
     
-    const prompt = `Create a professional corporate headshot photograph of the person shown in the reference image(s). 
-The subject is a ${ageDescription} ${genderTerm}.
-Style: ${styleGuide}
-Pose: ${posePrompt}
+    const prompt = `Create a professional corporate headshot photograph.
 
-Requirements:
+IMAGE ROLES:
+- Image 1 (first image): BACKGROUND REFERENCE - Use this exact light blue studio background color and style
+- Images 2+ (remaining images): FACE/IDENTITY REFERENCE - Maintain exact facial features from these reference photos
+
+SUBJECT DETAILS:
+- ${ageDescription} ${genderTerm}
+- Style: ${styleGuide}
+- Pose: ${posePrompt}
+
+REQUIREMENTS:
+- Background MUST match the light blue color from the background reference image exactly
 - Head perfectly straight and upright, not tilted
 - Face directly facing the camera with direct eye contact
-- Solid plain light gray background, uniform and flat
 - Professional studio lighting with soft, even illumination
 - Natural, confident expression with a subtle smile
 - High-quality professional photography style
 - Clean and minimalist composition
 - Well-groomed, polished appearance appropriate for corporate use
-- Maintain the exact facial features and identity from the reference image(s)
+- Maintain the exact facial features and identity from the face reference images
 
-Do NOT include: watermarks, text overlays, dramatic shadows, colorful or patterned backgrounds, casual or unprofessional styling.`;
+Do NOT include: watermarks, text overlays, dramatic shadows, patterned backgrounds, casual or unprofessional styling.`;
 
     const inputParams: any = {
       prompt,
-      image_input: referenceImages,
+      image_input: [STUDIO_BACKGROUND_BASE64, ...referenceImages],
       aspect_ratio: "1:1",
       resolution: "2K",
       output_format: "png",
