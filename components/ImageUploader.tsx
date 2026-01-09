@@ -73,6 +73,28 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
     }
   };
 
+  const pollPredictionStatus = async (predictionId: string): Promise<string[]> => {
+    const maxAttempts = 120; // 최대 2분 (1초 간격)
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const response = await fetch(`/api/generate/status?id=${predictionId}`);
+      const data = await response.json();
+
+      if (data.status === 'succeeded') {
+        return data.images;
+      } else if (data.status === 'failed' || data.status === 'canceled') {
+        throw new Error(data.error || '이미지 생성에 실패했습니다.');
+      }
+
+      // 1초 대기 후 재시도
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      attempts++;
+    }
+
+    throw new Error('이미지 생성 시간이 초과되었습니다. 다시 시도해주세요.');
+  };
+
   const handleGenerate = async () => {
     if (selectedImages.length === 0) {
       setError('이미지를 먼저 업로드해주세요.');
@@ -83,6 +105,7 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
     setError(null);
 
     try {
+      // 1단계: prediction 생성 요청
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -97,11 +120,18 @@ export default function ImageUploader({ onImagesGenerated }: ImageUploaderProps)
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '이미지 생성에 실패했습니다.');
+        throw new Error(errorData.error || '이미지 생성 요청에 실패했습니다.');
       }
 
       const data = await response.json();
-      onImagesGenerated(data.images);
+
+      if (!data.predictionId) {
+        throw new Error('서버 응답 오류: prediction ID가 없습니다.');
+      }
+
+      // 2단계: 폴링으로 결과 대기
+      const images = await pollPredictionStatus(data.predictionId);
+      onImagesGenerated(images);
     } catch (err: any) {
       setError(err.message || '이미지 생성 중 오류가 발생했습니다.');
     } finally {

@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const MAX_REFERENCE_IMAGES = 5;
     const referenceImages = imageDataUrls.slice(0, MAX_REFERENCE_IMAGES);
-    
+
     const prompt = `Create a professional corporate headshot photograph.
 
 IMAGE ROLES:
@@ -103,7 +103,7 @@ OTHER REQUIREMENTS:
 
 FORBIDDEN: dark backgrounds, gray backgrounds, gradients, shadows on background, any background variation, watermarks, text.`;
 
-    const inputParams: any = {
+    const inputParams = {
       prompt,
       image_input: [STUDIO_BACKGROUND_BASE64, ...referenceImages],
       aspect_ratio: "1:1",
@@ -112,22 +112,23 @@ FORBIDDEN: dark backgrounds, gray backgrounds, gradients, shadows on background,
       safety_filter_level: "block_only_high",
     };
 
-    const output = await replicate.run(
-      "google/nano-banana-pro",
-      { input: inputParams }
-    ) as any;
+    // 비동기 prediction 생성 (완료를 기다리지 않음)
+    const prediction = await replicate.predictions.create({
+      model: "google/nano-banana-pro",
+      input: inputParams,
+    });
 
-    console.log('Image generation successful');
+    console.log('Prediction created:', prediction.id);
 
-    // Replicate API는 배열을 반환
-    const imageUrls = Array.isArray(output) ? output : [output];
-
-    return NextResponse.json({ images: imageUrls });
+    // prediction ID를 반환하여 클라이언트에서 폴링하도록 함
+    return NextResponse.json({
+      predictionId: prediction.id,
+      status: prediction.status
+    });
   } catch (error: any) {
-    console.error('Error generating images:', error);
+    console.error('Error creating prediction:', error);
 
-    // 상세한 에러 정보 제공
-    const errorMessage = error.message || 'Failed to generate images';
+    const errorMessage = error.message || 'Failed to create prediction';
     const errorDetails = error.response?.data || error.toString();
 
     console.error('Error details:', errorDetails);
